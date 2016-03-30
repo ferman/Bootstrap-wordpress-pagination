@@ -58,3 +58,41 @@ function customize_wp_bootstrap_pagination($args) {
 }
 add_filter('wp_bootstrap_pagination_defaults', 'customize_wp_bootstrap_pagination');
 ```
+
+Adding Pagination to Custom Query
+-------------------------
+```
+<?php
+  $args = array(
+    'post_type' => 'custom-post-type',
+    'posts_per_page' => get_option('posts_per_page'),
+    // 'posts_per_page' => 6, // If you want to list a differnt number of posts per page than WP default.
+  );
+  $args['paged'] = get_query_var( 'paged' ) ? get_query_var( 'paged' ) : 1;
+  $custom_query = new WP_Query($args);
+  
+  // Pagination fix
+  $temp_query = $wp_query;
+  $wp_query   = NULL;
+  $wp_query   = $custom_query;
+  
+  if ( $custom_query->have_posts() ) :
+  while ( $custom_query->have_posts() ) :
+  $custom_query->the_post();
+  
+  get_template_part( 'content', 'blog' );
+  
+  endwhile;
+  endif;
+  // Reset postdata
+  wp_reset_postdata();
+  
+  
+  if ( function_exists('wp_bootstrap_pagination') )
+  wp_bootstrap_pagination();
+  
+  // Reset main query object
+  $wp_query = NULL;
+  $wp_query = $temp_query;
+?>
+```
